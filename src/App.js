@@ -1,21 +1,41 @@
-import { Card } from "@mui/material";
 import { useEffect, useState } from "react";
+import Card from "./components/cards";
+
 import "./App.css";
 import Form from "./components/form";
 
 function App() {
-  const [apiData, setApiData] = useState({});
+  const [renderCard, setRenderCard] = useState([]);
+  const [msError, setMsError] = useState("");
+  const [start, setStart] = useState(false);
+  const [allowed, setAllowed] = useState(false);
+  const [filteredValue, setFilteredValue] = useState([]);
+
   const handleItems = (value) => {
-    console.log(value);
+    setFilteredValue(value.toLowerCase().split("/"));
+    value && setStart(true);
   };
   useEffect(() => {
-    fetch(`https://api.github.com/repos/${"facebook"}/${"react"}`)
-      .then((res) => res.json())
-      .then((res) => setApiData(res));
-  }, []);
+    start &&
+      fetch(
+        `https://api.github.com/repos/${filteredValue[0]}/${filteredValue[1]}`
+      )
+        .then((res) => res.json())
+        .then((res) => {
+          if (!res.message) {
+            setRenderCard([...renderCard, res]);
+            setAllowed(true);
+            setMsError("");
+          } else {
+            setMsError(res);
+          }
+        });
+  }, [filteredValue]);
+
   return (
     <div className="App">
-      <Form apiData={apiData} handleItems={handleItems} />
+      <Form msError={msError} handleItems={handleItems} />
+      {allowed && <Card renderCard={renderCard} />}
     </div>
   );
 }
